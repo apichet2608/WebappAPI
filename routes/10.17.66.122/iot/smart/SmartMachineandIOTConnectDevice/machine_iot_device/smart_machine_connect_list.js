@@ -10,36 +10,141 @@ const pool = new Pool({
   database: "iot",
 });
 
+// const pool = new Pool({
+//   host: "127.0.0.1",
+//   port: 5432,
+//   user: "postgres",
+//   password: "postgres",
+//   database: "iot",
+// });
+
 const query = (text, params) => pool.query(text, params);
+
+// router.get("/count-status", async (req, res) => {
+//   try {
+//     const { status, item_sub_process, smart_flag, item_building, production } =
+//       req.query;
+//     let queryStr;
+//     const queryParams = [];
+
+//     const result = await query(`
+//         SELECT
+//         status,
+//         status_count
+//     FROM (
+//         SELECT
+//             COALESCE(status, 'Total') AS status,
+//             COUNT(*) AS status_count
+//         FROM
+//             smart.smart_machine_connect_list
+//         WHERE
+//             status IN ('Finished', 'Planed', 'Wait for plan', '')
+//         GROUP BY
+//             GROUPING SETS ((status), ())
+//     ) AS subquery
+//     ORDER BY
+//         CASE
+//             WHEN status = 'Total' THEN 0
+//             WHEN status = 'Finished' THEN 1
+//             WHEN status = 'Wait for plan' THEN 2
+//             WHEN status = 'Planed' THEN 3
+//             ELSE 4
+//             -- Handle any other cases here
+//         END,
+//         status
+//         `);
+//     res.status(200).json(result.rows);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "An error occurred while fetching data" });
+//   }
+// });
 
 router.get("/count-status", async (req, res) => {
   try {
-    const result = await query(`
-    SELECT
-    status,
-    status_count
-FROM (
-    SELECT
-        COALESCE(status, 'Total') AS status,
-        COUNT(*) AS status_count
-    FROM
-        smart.smart_machine_connect_list
-    WHERE
-        status IN ('Finished', 'Planed', 'Wait for plan', '')
-    GROUP BY
-        GROUPING SETS ((status), ())
-) AS subquery
-ORDER BY
-    CASE
-        WHEN status = 'Total' THEN 0
-        WHEN status = 'Finished' THEN 1
-        WHEN status = 'Wait for plan' THEN 2
-        WHEN status = 'Planed' THEN 3
-        ELSE 4
-        -- Handle any other cases here
-    END,
-    status
-    `);
+    const { status, item_sub_process, smart_flag, item_building, production } =
+      req.query;
+    let queryStr;
+    const queryParams = [];
+
+    queryStr = `SELECT
+        status,
+        status_count
+    FROM (
+        SELECT
+            COALESCE(status, 'Total') AS status,
+            COUNT(*) AS status_count
+        FROM
+            smart.smart_machine_connect_list
+        WHERE 1=1
+        `;
+
+    if (status === "total") {
+      queryStr += ` AND status IN ('Finished', 'Planed', 'Wait for plan', '')`;
+    } else {
+      queryStr += ` AND status = $1`;
+      queryParams.push(status);
+    }
+
+    if (item_sub_process !== "ALL") {
+      queryStr += ` AND item_sub_process = $${queryParams.length + 1}`;
+      queryParams.push(item_sub_process);
+    }
+
+    if (smart_flag !== "ALL") {
+      queryStr += ` AND smart_flag = $${queryParams.length + 1}`;
+      queryParams.push(smart_flag);
+    }
+
+    if (item_building !== "ALL") {
+      queryStr += ` AND item_building = $${queryParams.length + 1}`;
+      queryParams.push(item_building);
+    }
+    if (production !== "ALL") {
+      queryStr += ` AND production = $${queryParams.length + 1}`;
+      queryParams.push(production);
+    }
+
+    queryStr += ` GROUP BY
+            GROUPING SETS ((status), ())
+    ) AS subquery
+    ORDER BY
+        CASE
+            WHEN status = 'Total' THEN 0
+            WHEN status = 'Finished' THEN 1
+            WHEN status = 'Wait for plan' THEN 2
+            WHEN status = 'Planed' THEN 3
+            ELSE 4
+            -- Handle any other cases here
+        END,
+        status`;
+    console.log(queryStr);
+    const result = await query(queryStr, queryParams);
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
+  }
+});
+
+router.get("/distinctproduction", async (req, res) => {
+  try {
+    const { status } = req.query;
+
+    let queryStr;
+    const queryParams = [];
+
+    queryStr = `SELECT DISTINCT production FROM smart.smart_machine_connect_list`;
+    if (status === "total") {
+      queryStr += ` WHERE status IN ('Finished', 'Planed', 'Wait for plan', '')`;
+    } else {
+      queryStr += ` WHERE status = $1`;
+      queryParams.push(status);
+    }
+
+    queryStr += ` ORDER BY production ASC`;
+    const result = await query(queryStr, queryParams);
+
     res.status(200).json(result.rows);
   } catch (error) {
     console.error(error);
@@ -49,21 +154,32 @@ ORDER BY
 
 router.get("/distinctitem_building", async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, production } = req.query;
 
     let queryStr;
     const queryParams = [];
 
     queryStr = `SELECT DISTINCT item_building FROM smart.smart_machine_connect_list`;
+
     if (status === "total") {
+      // Use explicit casting for status parameter
       queryStr += ` WHERE status IN ('Finished', 'Planed', 'Wait for plan', '')`;
     } else {
       queryStr += ` WHERE status = $1`;
       queryParams.push(status);
     }
 
+    if (production === "ALL") {
+      queryStr += ``;
+    } else {
+      queryStr += queryParams.length
+        ? ` AND production = $2`
+        : ` AND production = $1`;
+      queryParams.push(production);
+    }
+
     queryStr += ` ORDER BY item_building ASC`;
-    console.log(queryStr);
+
     const result = await query(queryStr, queryParams);
 
     res.status(200).json(result.rows);
@@ -75,7 +191,7 @@ router.get("/distinctitem_building", async (req, res) => {
 
 router.get("/distinctitem_sub_process", async (req, res) => {
   try {
-    const { item_building, status } = req.query;
+    const { item_building, status, production } = req.query;
 
     let queryStr;
     const queryParams = [];
@@ -100,6 +216,10 @@ router.get("/distinctitem_sub_process", async (req, res) => {
       queryStr += ` AND item_building = $${queryParams.length + 1}`;
       queryParams.push(item_building);
     }
+    if (production !== "ALL") {
+      queryStr += ` AND production = $${queryParams.length + 1}`;
+      queryParams.push(production);
+    }
     const result = await query(queryStr, queryParams);
 
     res.status(200).json(result.rows);
@@ -109,12 +229,12 @@ router.get("/distinctitem_sub_process", async (req, res) => {
   }
 });
 
-router.get("/distinctitem_iot_group1", async (req, res) => {
+router.get("/distinctsmart_flag", async (req, res) => {
   try {
-    const { item_sub_process, item_building, status } = req.query;
+    const { item_sub_process, item_building, status, production } = req.query;
 
     let queryStr = `
-      SELECT DISTINCT item_iot_group1
+      SELECT DISTINCT smart_flag
       FROM smart.smart_machine_connect_list
       WHERE 1=1
     `;
@@ -139,7 +259,10 @@ router.get("/distinctitem_iot_group1", async (req, res) => {
       queryStr += ` AND status = $${queryParams.length + 1}`;
       queryParams.push(status);
     }
-
+    if (production !== "ALL") {
+      queryStr += ` AND production = $${queryParams.length + 1}`;
+      queryParams.push(production);
+    }
     const result = await query(queryStr, queryParams);
 
     res.status(200).json(result.rows);
@@ -151,7 +274,7 @@ router.get("/distinctitem_iot_group1", async (req, res) => {
 
 router.get("/tablescada", async (req, res) => {
   try {
-    const { status, item_sub_process, item_iot_group1, item_building } =
+    const { status, item_sub_process, smart_flag, item_building, production } =
       req.query;
     let queryStr;
     const queryParams = [];
@@ -169,14 +292,18 @@ router.get("/tablescada", async (req, res) => {
       queryParams.push(item_sub_process);
     }
 
-    if (item_iot_group1 !== "ALL") {
-      queryStr += ` AND item_iot_group1 = $${queryParams.length + 1}`;
-      queryParams.push(item_iot_group1);
+    if (smart_flag !== "ALL") {
+      queryStr += ` AND smart_flag = $${queryParams.length + 1}`;
+      queryParams.push(smart_flag);
     }
 
     if (item_building !== "ALL") {
       queryStr += ` AND item_building = $${queryParams.length + 1}`;
       queryParams.push(item_building);
+    }
+    if (production !== "ALL") {
+      queryStr += ` AND production = $${queryParams.length + 1}`;
+      queryParams.push(production);
     }
 
     queryStr += ` ORDER BY finish_date ASC`;
@@ -191,13 +318,13 @@ router.get("/tablescada", async (req, res) => {
 
 router.get("/barchartCountbyitem_sub_process", async (req, res) => {
   try {
-    const { item_sub_process, item_iot_group1, status, item_building } =
+    const { item_sub_process, smart_flag, status, item_building, production } =
       req.query;
 
     let queryStr;
     const queryParams = [];
 
-    if (item_iot_group1 === "ALL") {
+    if (smart_flag === "ALL") {
       queryStr = `
       SELECT
       item_sub_process,
@@ -228,12 +355,12 @@ router.get("/barchartCountbyitem_sub_process", async (req, res) => {
       queryParams.push(status);
     }
 
-    // Check if item_iot_group1 is not "ALL"
-    if (item_iot_group1 !== "ALL") {
-      queryStr += ` AND item_iot_group1 = $${queryParams.length + 1}`;
-      queryParams.push(item_iot_group1);
+    // Check if smart_flag is not "ALL"
+    if (smart_flag !== "ALL") {
+      queryStr += ` AND smart_flag = $${queryParams.length + 1}`;
+      queryParams.push(smart_flag);
     }
-    // Check if item_iot_group1 is not "ALL"
+    // Check if smart_flag is not "ALL"
     if (item_sub_process !== "ALL") {
       queryStr += ` AND item_sub_process = $${queryParams.length + 1}`;
       queryParams.push(item_sub_process);
@@ -244,8 +371,12 @@ router.get("/barchartCountbyitem_sub_process", async (req, res) => {
       queryStr += ` AND item_building = $${queryParams.length + 1}`;
       queryParams.push(item_building);
     }
-
-    if (item_iot_group1 === "ALL") {
+    // Check if item_building is not "ALL"
+    if (production !== "ALL") {
+      queryStr += ` AND production = $${queryParams.length + 1}`;
+      queryParams.push(production);
+    }
+    if (smart_flag === "ALL") {
       queryStr += `
       GROUP BY
       item_sub_process
@@ -274,684 +405,41 @@ router.put("/scada/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      item_factory,
-      item_code,
-      item_desc1,
-      item_desc2,
-      item_desc3,
-      item_status,
-      item_building,
-      item_group,
-      item_sub_group,
-      item_owner_cc,
-      item_sub_process,
-      item_mac_maker,
-      item_iot_mc_type,
-      item_iot_group1,
-      item_iot_cont1,
-      item_iot_group2,
-      item_iot_cont2,
-      status,
+      smart_flag,
+      production,
       npi_year,
+      status,
+      status_plc,
       plan_date,
       finish_date,
-      remark,
-      feeder_no,
-      barcodeid,
-      barcodeid_plan_date,
-      barcodeid_finish_date,
-      status_barcodeid,
-      stopper,
-      stopper_plan_date,
-      stopper_finish_date,
-      stopper_status,
+      barcode,
     } = req.body;
 
     const result = await query(
-      `UPDATE smart.smart_machine_connect_list
-       SET
-         item_factory = $1,
-         item_code = $2,
-         item_desc1 = $3,
-         item_desc2 = $4,
-         item_desc3 = $5,
-         item_status = $6,
-         item_building = $7,
-         item_group = $8,
-         item_sub_group = $9,
-         item_owner_cc = $10,
-         item_sub_process = $11,
-         item_mac_maker = $12,
-         item_iot_mc_type = $13,
-         item_iot_group1 = $14,
-         item_iot_cont1 = $15,
-         item_iot_group2 = $16,
-         item_iot_cont2 = $17,
-         status = $18,
-         npi_year = $19,
-         plan_date = $20,
-         finish_date = $21,
-         remark = $22,
-         feeder_no = $23,
-         barcodeid  = $24,
-        barcodeid_plan_date  = $25,
-        barcodeid_finish_date  = $26,
-        status_barcodeid  = $27,
-        stopper  = $28,
-        stopper_plan_date  = $29,
-        stopper_finish_date  = $30,
-        stopper_status  = $31
-       WHERE id = $32;`,
+      `update
+	    smart.smart_machine_connect_list
+       set
+	     smart_flag = $1,
+	     production = $2,
+	     npi_year = $3,
+	     status = $4,
+	     status_plc = $5,
+	     plan_date = $6,
+	     finish_date = $7,
+	     barcode = $8
+      where
+	     id = $9`,
       [
-        item_factory,
-        item_code,
-        item_desc1,
-        item_desc2,
-        item_desc3,
-        item_status,
-        item_building,
-        item_group,
-        item_sub_group,
-        item_owner_cc,
-        item_sub_process,
-        item_mac_maker,
-        item_iot_mc_type,
-        item_iot_group1,
-        item_iot_cont1,
-        item_iot_group2,
-        item_iot_cont2,
-        status,
+        smart_flag,
+        production,
         npi_year,
+        status,
+        status_plc,
         plan_date,
         finish_date,
-        remark,
-        feeder_no,
-        barcodeid,
-        barcodeid_plan_date,
-        barcodeid_finish_date,
-        status_barcodeid,
-        stopper,
-        stopper_plan_date,
-        stopper_finish_date,
-        stopper_status,
+        barcode,
         id,
       ]
-    );
-
-    res.status(200).json({ message: "Data updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while updating data" });
-  }
-});
-
-// DELETE route to delete data
-router.delete("/scada/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const result = await query(
-      "DELETE FROM smart.smart_machine_connect_list WHERE id = $1;",
-      [id]
-    );
-
-    res.status(200).json({ message: "Data deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while deleting data" });
-  }
-});
-
-// POST route to add new data
-router.post("/scada/", async (req, res) => {
-  try {
-    const {
-      item_factory,
-      item_code,
-      item_desc2,
-      item_desc3,
-      item_status,
-      item_building,
-      item_group,
-      item_sub_group,
-      item_owner_cc,
-      item_sub_process,
-      item_mac_maker,
-      item_iot_mc_type,
-      item_iot_group1,
-      item_iot_cont1,
-      item_iot_group2,
-      item_iot_cont2,
-      status,
-      npi_year,
-      plan_date,
-      finish_date,
-      remark,
-      feeder_no,
-      item_desc1,
-      barcodeid,
-      barcodeid_plan_date,
-      barcodeid_finish_date,
-      status_barcodeid,
-      stopper,
-      stopper_plan_date,
-      stopper_finish_date,
-      stopper_status,
-    } = req.body;
-
-    const result = await query(
-      `insert
-      into
-      smart.smart_machine_connect_list
-    (item_factory,
-      item_code,
-      item_desc2,
-      item_desc3,
-      item_status,
-      item_building,
-      item_group,
-      item_sub_group,
-      item_owner_cc,
-      item_sub_process,
-      item_mac_maker,
-      item_iot_mc_type,
-      item_iot_group1,
-      item_iot_cont1,
-      item_iot_group2,
-      item_iot_cont2,
-      status,
-      npi_year,
-      plan_date,
-      finish_date,
-      remark,
-      feeder_no,
-      item_desc1,
-      barcodeid,
-	barcodeid_plan_date,
-	barcodeid_finish_date,
-	status_barcodeid,
-	stopper,
-	stopper_plan_date,
-	stopper_finish_date,
-	stopper_status)
-    values($1,
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    $7,
-    $8,
-    $9,
-    $10,
-    $11,
-    $12,
-    $13,
-    $14,
-    $15,
-    $16,
-    $17,
-    $18,
-    $19,
-    $20,
-    $21,
-    $22,
-    $23,
-    $24,
-    $25,
-    $26,
-    $27,
-    $28,
-    $29,
-    $30,
-    $31);`,
-      [
-        item_factory,
-        item_code,
-        item_desc2,
-        item_desc3,
-        item_status,
-        item_building,
-        item_group,
-        item_sub_group,
-        item_owner_cc,
-        item_sub_process,
-        item_mac_maker,
-        item_iot_mc_type,
-        item_iot_group1,
-        item_iot_cont1,
-        item_iot_group2,
-        item_iot_cont2,
-        status,
-        npi_year,
-        plan_date,
-        finish_date,
-        remark,
-        feeder_no,
-        item_desc1,
-        barcodeid,
-        barcodeid_plan_date,
-        barcodeid_finish_date,
-        status_barcodeid,
-        stopper,
-        stopper_plan_date,
-        stopper_finish_date,
-        stopper_status,
-      ]
-    );
-
-    res.status(201).json({ message: "Data added successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while adding data" });
-  }
-});
-
-router.get("/tablebarcodeid", async (req, res) => {
-  try {
-    const { status } = req.query;
-
-    let queryStr = "";
-    let queryParams = [];
-
-    if (status === "total") {
-      queryStr = `
-      select
-  id,
-      item_code, 
-      item_building,
-      item_owner_cc,
-      item_sub_process,
-      item_iot_group1,
-      barcodeid ,
-      barcodeid_plan_date ,
-      barcodeid_finish_date ,
-      status_barcodeid
-    from
-      smart.smart_machine_connect_list
-     WHERE status_barcodeid IN ('Finished', 'Planed', 'Wait for plan', '')  OR status_barcodeid IS NULL
-     and  barcodeid = 'Y'
-      `;
-    } else {
-      if (status === "") {
-        queryStr = `
-        select
-    id,
-    item_code, 
-    item_building,
-    item_owner_cc,
-    item_sub_process,
-    item_iot_group1,
-    barcodeid ,
-    barcodeid_plan_date ,
-    barcodeid_finish_date ,
-    status_barcodeid
-  from
-    smart.smart_machine_connect_list
-   WHERE status_barcodeid = $1 OR status_barcodeid IS NULL
-   and  barcodeid = 'Y'
-        `;
-        queryParams = [status];
-      } else {
-        queryStr = `
-        select
-    id,
-    item_code, 
-    item_building,
-    item_owner_cc,
-    item_sub_process,
-    item_iot_group1,
-    barcodeid ,
-    barcodeid_plan_date ,
-    barcodeid_finish_date ,
-    status_barcodeid
-  from
-    smart.smart_machine_connect_list
-   WHERE status_barcodeid = $1
-   and  barcodeid = 'Y'
-        `;
-        queryParams = [status];
-      }
-    }
-
-    const result = await query(queryStr, queryParams);
-    res.status(200).json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while fetching data" });
-  }
-});
-
-// PUT route to update data
-router.put("/barcodeid/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      item_code,
-      item_building,
-      item_owner_cc,
-      item_sub_process,
-      item_iot_group1,
-      barcodeid,
-      barcodeid_plan_date,
-      barcodeid_finish_date,
-      status_barcodeid,
-    } = req.body;
-
-    // Rest of the code remains unchanged
-    const result = await query(
-      `UPDATE smart.smart_machine_connect_list
-       SET
-         item_code = $1,
-         item_building = $2,
-         item_owner_cc = $3,
-         item_sub_process = $4,
-         item_iot_group1 = $5,
-         barcodeid = $6,
-         barcodeid_plan_date = $7,
-         barcodeid_finish_date = $8,
-         status_barcodeid = $9
-       WHERE id = $10;`,
-      [
-        item_code,
-        item_building,
-        item_owner_cc,
-        item_sub_process,
-        item_iot_group1,
-        barcodeid,
-        barcodeid_plan_date,
-        barcodeid_finish_date,
-        status_barcodeid,
-        id,
-      ]
-    );
-
-    res.status(200).json({ message: "Data updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while updating data" });
-  }
-});
-
-// DELETE route to delete data
-router.delete("/barcodeid/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Rest of the code remains unchanged
-    const result = await query(
-      "DELETE FROM smart.smart_machine_connect_list WHERE id = $1;",
-      [id]
-    );
-
-    res.status(200).json({ message: "Data deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while deleting data" });
-  }
-});
-
-// POST route to add new data
-router.post("/barcodeid/", async (req, res) => {
-  try {
-    const {
-      item_code,
-      item_building,
-      item_owner_cc,
-      item_sub_process,
-      item_iot_group1,
-      barcodeid,
-      barcodeid_plan_date,
-      barcodeid_finish_date,
-      status_barcodeid,
-    } = req.body;
-
-    // Rest of the code remains unchanged
-    const result = await query(
-      `INSERT INTO smart_machine_connect_list
-      (item_code,
-       item_building,
-       item_owner_cc,
-       item_sub_process,
-       item_iot_group1,
-       barcodeid,
-       barcodeid_plan_date,
-       barcodeid_finish_date,
-       status_barcodeid)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
-      [
-        item_code,
-        item_building,
-        item_owner_cc,
-        item_sub_process,
-        item_iot_group1,
-        barcodeid,
-        barcodeid_plan_date,
-        barcodeid_finish_date,
-        status_barcodeid,
-      ]
-    );
-
-    res.status(201).json({ message: "Data added successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while adding data" });
-  }
-});
-
-router.get("/tablestopper", async (req, res) => {
-  try {
-    const { status } = req.query;
-
-    let queryStr = "";
-    let queryParams = [];
-
-    if (status === "total") {
-      queryStr = `
-      select
-	id,
-	item_code,
-	item_building,
-	item_owner_cc,
-	item_sub_process,
-	item_iot_group1,
-	stopper,
-	stopper_plan_date,
-	stopper_finish_date,
-	stopper_status
-from
-	smart.smart_machine_connect_list
-where
-	stopper_status in ('Finished', 'Planed', 'Wait for plan', '')
-	or stopper_status is null
-	and stopper = 'Y'
-      `;
-    } else {
-      if (status === "") {
-        queryStr = `
-        select
-        id,
-        item_code, 
-        item_building,
-        item_owner_cc,
-        item_sub_process,
-        item_iot_group1,
-        stopper,
-        stopper_plan_date,
-        stopper_finish_date,
-        stopper_status
-      from
-        smart.smart_machine_connect_list
-      where
-        stopper_status = $1
-        OR stopper_status is null    
-        and stopper = 'Y'  
-      `;
-        queryParams = [status];
-      } else {
-        queryStr = `
-        select
-        id,
-        item_code, 
-        item_building,
-        item_owner_cc,
-        item_sub_process,
-        item_iot_group1,
-        stopper,
-        stopper_plan_date,
-        stopper_finish_date,
-        stopper_status
-      from
-        smart.smart_machine_connect_list
-      where
-        stopper_status = $1
-        and stopper = 'Y'
-      `;
-        queryParams = [status];
-      }
-    }
-
-    const result = await query(queryStr, queryParams);
-    res.status(200).json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while fetching data" });
-  }
-});
-
-// PUT route to update data
-router.put("/stopper/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      item_code,
-      item_building,
-      item_owner_cc,
-      item_sub_process,
-      item_iot_group1,
-      stopper,
-      stopper_plan_date,
-      stopper_finish_date,
-      stopper_status,
-    } = req.body;
-
-    // Rest of the code remains unchanged
-    const result = await query(
-      `UPDATE smart.smart_machine_connect_list
-       SET
-         item_code = $1,
-         item_building = $2,
-         item_owner_cc = $3,
-         item_sub_process = $4,
-         item_iot_group1 = $5,
-         stopper = $6,
-         stopper_plan_date = $7,
-         stopper_finish_date = $8,
-         stopper_status = $9
-       WHERE id = $10;`,
-      [
-        item_code,
-        item_building,
-        item_owner_cc,
-        item_sub_process,
-        item_iot_group1,
-        stopper,
-        stopper_plan_date,
-        stopper_finish_date,
-        stopper_status,
-        id,
-      ]
-    );
-
-    res.status(200).json({ message: "Data updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while updating data" });
-  }
-});
-
-// DELETE route to delete data
-router.delete("/stopper/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Rest of the code remains unchanged
-    const result = await query(
-      "DELETE FROM smart.smart_machine_connect_list WHERE id = $1;",
-      [id]
-    );
-
-    res.status(200).json({ message: "Data deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while deleting data" });
-  }
-});
-
-// POST route to add new data
-router.post("/stopper/", async (req, res) => {
-  try {
-    const {
-      item_code,
-      item_building,
-      item_owner_cc,
-      item_sub_process,
-      item_iot_group1,
-      stopper,
-      stopper_plan_date,
-      stopper_finish_date,
-      stopper_status,
-    } = req.body;
-
-    // Rest of the code remains unchanged
-    const result = await query(
-      `INSERT INTO smart.smart_machine_connect_list
-      (item_code,
-       item_building,
-       item_owner_cc,
-       item_sub_process,
-       item_iot_group1,
-       stopper,
-       stopper_plan_date,
-       stopper_finish_date,
-       stopper_status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`,
-      [
-        item_code,
-        item_building,
-        item_owner_cc,
-        item_sub_process,
-        item_iot_group1,
-        stopper,
-        stopper_plan_date,
-        stopper_finish_date,
-        stopper_status,
-      ]
-    );
-
-    res.status(201).json({ message: "Data added successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while adding data" });
-  }
-});
-
-//put
-router.put("/updateitem_desc3/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { item_desc3 } = req.body;
-    console.log(item_desc3);
-    if (!item_desc3) {
-      return res.status(400).json({ error: "Missing machine_buyoff data" });
-    }
-
-    const item_desc3Json = item_desc3; // แปลง Array of Objects เป็น JSON
-    const result = await query(
-      `UPDATE smart.smart_machine_connect_list
-       SET item_desc3 = $1
-       WHERE id = $2`,
-      [item_desc3Json, id]
     );
 
     res.status(200).json({ message: "Data updated successfully" });
