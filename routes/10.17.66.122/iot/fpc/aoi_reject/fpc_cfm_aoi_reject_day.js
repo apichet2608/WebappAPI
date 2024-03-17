@@ -838,8 +838,7 @@ router.get("/Master_list_table", async (req, res) => {
 //ADD AOI MASTER LIST
 router.post("/add_aoi_master_list", async (req, res) => {
   try {
-    const { month, unit, side, product, target_p_reject, attached_file } =
-      req.body;
+    const { month, unit, side, product, target_p_reject } = req.body;
 
     const results = await query(
       `insert
@@ -849,17 +848,15 @@ router.post("/add_aoi_master_list", async (req, res) => {
 	        unit,
 	        side,
 	        product,
-	        target_p_reject,
-          attached_file)
+	        target_p_reject)
         values
           ($1,
           $2,
           $3,
           $4,
-          $5,
-          $6)
+          $5)
       `,
-      [month, unit, side, product, target_p_reject, attached_file]
+      [month, unit, side, product, target_p_reject]
     );
 
     res.status(201).json({ message: "Data added successfully" });
@@ -873,8 +870,7 @@ router.post("/add_aoi_master_list", async (req, res) => {
 router.put("/EditMain_aoi_master_list/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { month, unit, side, product, target_p_reject, attached_file } =
-      req.body;
+    const { month, unit, side, product, target_p_reject } = req.body;
 
     const result = await pool.query(
       `
@@ -884,11 +880,10 @@ router.put("/EditMain_aoi_master_list/:id", async (req, res) => {
         unit = $2,
         side = $3,
         product = $4,
-        target_p_reject = $5,
-        attached_file = $6
-      WHERE id = $7;
+        target_p_reject = $5
+      WHERE id = $6;
       `,
-      [month, unit, side, product, target_p_reject, attached_file, id]
+      [month, unit, side, product, target_p_reject, id]
     );
 
     // Check if the update affected any rows

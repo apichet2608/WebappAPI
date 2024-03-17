@@ -71,6 +71,14 @@ router.get("/smart_machine_upd_npi_product_status_read", async (req, res) => {
       queryParams.push(flpmb_product);
     }
 
+    // Add condition for filtering flpm_year not in 2021 and 2022
+    conditions.push(
+      `flpm_year NOT IN ($${queryParams.length + 1}, $${
+        queryParams.length + 2
+      })`
+    );
+    queryParams.push(2021, 2022);
+
     if (conditions.length > 0) {
       queryString += ` AND ${conditions.join(" AND ")}`;
     }
@@ -85,6 +93,79 @@ router.get("/smart_machine_upd_npi_product_status_read", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
+// router.get("/smart_machine_upd_npi_product_status_read", async (req, res) => {
+//   try {
+//     const { flpm_year, pmc_customer_code, pmc_customer_desc, flpmb_product } =
+//       req.query;
+
+//     let queryString = `
+//       SELECT
+//         flpm_year,
+//         pmc_customer_code,
+//         pmc_apn,
+//         pmc_customer_desc,
+//         flpm_name,
+//         flqbu_build_name,
+//         flqbu_seq,
+//         flpmb_product,
+//         build_start,
+//         build_stop,
+//         pmc_box_email,
+//         pmc_ok2s,
+//         pmc_customer_box,
+//         flpm_lock_scan,
+//         lock_date,
+//         status_ok2s,
+//         status_lq,
+//         id,
+//         create_date,
+//         CASE
+//           WHEN flqbu_seq BETWEEN 1 AND 7 AND status_ok2s = 'Y' THEN 'Pass'
+//           WHEN flqbu_seq > 7 AND status_ok2s = 'Y' AND status_lq = 'Y' THEN 'Pass'
+//           ELSE NULL  -- or any other default value if needed
+//         END AS seq_group
+//       FROM
+//         smart.smart_machine_upd_npi_status
+//       WHERE 1=1`;
+
+//     const conditions = [];
+//     const queryParams = [];
+
+//     if (flpm_year && flpm_year !== "") {
+//       conditions.push(`flpm_year = $${queryParams.length + 1}`);
+//       queryParams.push(flpm_year);
+//     }
+
+//     if (pmc_customer_code && pmc_customer_code !== "") {
+//       conditions.push(`pmc_customer_code = $${queryParams.length + 1}`);
+//       queryParams.push(pmc_customer_code);
+//     }
+
+//     if (pmc_customer_desc && pmc_customer_desc !== "") {
+//       conditions.push(`pmc_customer_desc = $${queryParams.length + 1}`);
+//       queryParams.push(pmc_customer_desc);
+//     }
+
+//     if (flpmb_product && flpmb_product !== "") {
+//       conditions.push(`flpmb_product = $${queryParams.length + 1}`);
+//       queryParams.push(flpmb_product);
+//     }
+
+//     if (conditions.length > 0) {
+//       queryString += ` AND ${conditions.join(" AND ")}`;
+//     }
+
+//     queryString += " ORDER BY flqbu_seq ASC, flpm_year ASC";
+
+//     const result = await pool.query(queryString, queryParams);
+
+//     res.status(200).json(result.rows);
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).send("Internal Server Error");
+//   }
+// });
 
 //*Query Action onClick LQ - List
 // router.get("/smart_machine_upd_onclick_lq", async (req, res) => {

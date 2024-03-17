@@ -156,7 +156,7 @@ router.get("/TableData", async (req, res) => {
     const { select_building, select_process, select_machine } = req.query;
 
     let query = `
-      SELECT
+         SELECT
         id,
         item_code as machine,
         item_desc1,
@@ -176,10 +176,7 @@ router.get("/TableData", async (req, res) => {
         ROUND(oee::numeric, 1) as oee,  
         upd,
         scr,
-        mtbf,
-        mttr,
-        history_track,
-        predictive
+        history_track
       FROM smart.smart_machine_connect_list
     `;
 
@@ -464,6 +461,7 @@ router.get("/grr", async (req, res) => {
 FROM smart.smart_machine_grr AS grr
 INNER JOIN smart.smart_machine_connect_list AS list
 ON grr.mc_code = list.item_code
+
     `;
 
     // Add conditions to the query based on the provided parameters

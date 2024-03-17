@@ -80,14 +80,20 @@ router.get("/distinct_dept", async (req, res) => {
   try {
     const { select_div } = req.query;
     let query = `
-      select distinct dept  
-    from smart.smart_kpi_a1_main skam 
+      SELECT DISTINCT dept  
+      FROM smart.smart_kpi_a1_main skam
     `;
+
     if (select_div !== "ALL") {
       query += `
         WHERE div = $1
       `;
     }
+
+    query += `
+      ORDER BY dept ASC
+    `;
+
     const queryParams = select_div !== "ALL" ? [select_div] : [];
     const result = await pool.query(query, queryParams);
     res.json(result.rows);

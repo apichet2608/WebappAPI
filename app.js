@@ -11,6 +11,8 @@ const usersRouter = require("./routes/users");
 
 //*-------------------------SmartAOI---------------------------//
 const smartAoiRouter = require("./WebApp/smartAoi");
+const Smart_Fox = require("./WebApp/Smart_Fox");
+
 //*-------------------------SmartAOI---------------------------//
 
 const app = express();
@@ -31,6 +33,7 @@ app.use("/users", usersRouter);
 
 //*-------------------------SmartAOI---------------------------//
 app.use("/smart_aoi", smartAoiRouter);
+app.use("", Smart_Fox);
 //*-------------------------SmartAOI---------------------------//
 
 app.use(function (req, res, next) {

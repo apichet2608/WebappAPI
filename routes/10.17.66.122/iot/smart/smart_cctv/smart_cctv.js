@@ -499,51 +499,6 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-//put
-router.put("/updateview_cam/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { view_cam } = req.body;
-    console.log(view_cam);
-    if (!view_cam) {
-      return res.status(400).json({ error: "Missing attached file data" });
-    }
-
-    const view_camJson = view_cam; // แปลง Array of Objects เป็น JSON
-    const result = await query(
-      `UPDATE smart.smart_cctv
-       SET view_cam = $1
-       WHERE id = $2`,
-      [view_camJson, id]
-    );
-
-    res.status(200).json({ message: "Data updated successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while updating data" });
-  }
-});
-
-// Delete the view_cam for a specific record
-router.put("/deleteview_camJson/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Perform the deletion by setting the view_cam to null
-    const result = await query(
-      `UPDATE smart.smart_cctv
-       SET view_cam = null
-       WHERE id = $1`,
-      [id]
-    );
-
-    res.status(200).json({ message: "Data deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while deleting data" });
-  }
-});
-
 router.get("/piechart2", async (req, res) => {
   try {
     const select_build = req.query.select_build;

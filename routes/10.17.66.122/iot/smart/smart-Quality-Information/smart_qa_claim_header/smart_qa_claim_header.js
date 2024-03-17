@@ -33,8 +33,19 @@ router.get("/distinct_area", async (req, res) => {
 router.get("/distinct_defect_item", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT DISTINCT defect_item
-      FROM smart.smart_qa_claim_fa_master
+      SELECT defect_item
+FROM (
+    SELECT DISTINCT defect_item
+    FROM smart.smart_qa_claim_fa_master
+    UNION
+    SELECT 'No option' AS defect_item
+) AS combined_result
+ORDER BY 
+    CASE 
+        WHEN defect_item = 'No option' THEN 2 
+        ELSE 1 
+    END,
+    defect_item ASC;
     `);
 
     // Send the distinct defect items as JSON response
@@ -56,7 +67,11 @@ router.post("/add_quality", async (req, res) => {
       car_no,
       product_name,
       defect_item,
+      customer,
       area,
+      description,
+      claim_failure_rate,
+      impact_risk,
     } = req.body;
 
     const results = await query(
@@ -68,16 +83,36 @@ router.post("/add_quality", async (req, res) => {
 	      car_no,
 	      product_name,
 	      defect_item,
-        area)
+        customer,
+        area,
+        description,
+        claim_failure_rate,
+        impact_risk
+        )
   values
         ($1,
          $2,
          $3,
          $4,
          $5,
-         $6)
+         $6,
+         $7,
+         $8,
+         $9,
+         $10)
       `,
-      [claim_date, recieve_date, car_no, product_name, defect_item, area]
+      [
+        claim_date,
+        recieve_date,
+        car_no,
+        product_name,
+        defect_item,
+        customer,
+        area,
+        description,
+        claim_failure_rate,
+        impact_risk,
+      ]
     );
 
     res.status(201).json({ message: "Data added successfully" });
@@ -110,6 +145,12 @@ router.put("/EditMainQuality/:id", async (req, res) => {
       approved_time,
       hca_require,
       area,
+      action_containment,
+      action_preventive,
+      next_steps,
+      description,
+      impact_risk,
+      claim_failure_rate,
     } = req.body;
 
     const result = await pool.query(
@@ -133,8 +174,14 @@ router.put("/EditMainQuality/:id", async (req, res) => {
 	      qa_8d_report_att = $15,
 	      approved_time = $16,
 	      hca_require = $17,
-	      area = $18
-      WHERE id = $19;
+	      area = $18,
+        action_containment = $19,
+        action_preventive = $20,
+        next_steps = $21,
+        description = $22,
+        impact_risk = $23,
+        claim_failure_rate = $24
+      WHERE id = $25
       `,
       [
         claim_date,
@@ -155,16 +202,19 @@ router.put("/EditMainQuality/:id", async (req, res) => {
         approved_time,
         hca_require,
         area,
+        action_containment,
+        action_preventive,
+        next_steps,
+        description,
+        impact_risk,
+        claim_failure_rate,
         id,
       ]
     );
 
-    // Check if the update affected any rows
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Record not found" });
     }
-
-    // Send the JSON response back to the client
     res.json(result.rows);
   } catch (error) {
     console.error("Error executing query:", error);
@@ -172,11 +222,20 @@ router.put("/EditMainQuality/:id", async (req, res) => {
   }
 });
 
-//DELETE QUALITY
+//DELETE QUALITY && Item Select
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
+    // ลบข้อมูลในตาราง smart_qa_claim_fa_item_select ที่มี id_smart_qa_claim_header เท่ากับ id ใน table smart_qa_claim_header
+    await query(
+      `DELETE FROM smart.smart_qa_claim_fa_item_select
+       WHERE id_smart_qa_claim_header = $1;
+      `,
+      [id]
+    );
+
+    // ลบข้อมูลในตาราง smart_qa_claim_header
     const results = await query(
       `DELETE FROM smart.smart_qa_claim_header
        WHERE id = $1;
@@ -213,9 +272,15 @@ router.get("/QA_Main_Table", async (req, res) => {
     pqe,
     pqm,
     qa_8d_report_att,
-    approved_time,
+    TO_CHAR(approved_time, 'YYYY-MM-DD HH24:MI') AS approved_time,
     hca_require,
-    area
+    area,
+    action_containment,
+    action_preventive,
+    next_steps,
+    description,
+    impact_risk,
+    claim_failure_rate
 FROM
     smart.smart_qa_claim_header
 ORDER BY

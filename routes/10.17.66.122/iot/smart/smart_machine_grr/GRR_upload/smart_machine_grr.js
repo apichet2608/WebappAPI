@@ -27,57 +27,6 @@ router.get("/Machine_master", async (req, res) => {
   }
 });
 
-// router.get("/Master_grr_mc_code_grr_desc_choose", async (req, res) => {
-//   try {
-//     const result = await pool.query(
-//       `
-//       SELECT DISTINCT
-//         mc_code
-//       FROM
-//         smart.smart_machine_grr_master smgm
-//       `
-//     );
-
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error("Error executing query:", error);
-//     res.status(500).json({ error: "An error occurred" });
-//   }
-// });
-
-// router.get("/Master_grr_mc_code_grr_desc", async (req, res) => {
-//   try {
-//     const { mc_code } = req.query; // Change here from req.params to req.query
-//     if (!mc_code) {
-//       return res.status(400).json({ error: "mc_code parameter is required" });
-//     }
-
-//     const result = await pool.query(
-//       `
-//       SELECT DISTINCT
-//         grr_desc
-//       FROM
-//         smart.smart_machine_grr_master smgm
-//       WHERE
-//         mc_code = $1
-//       `,
-//       [mc_code]
-//     );
-//     if (result.rows.length === 0) {
-//       return res
-//         .status(404)
-//         .json({ error: "No results found for the provided mc_code" });
-//     }
-
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error("Error executing query:", error);
-//     res
-//       .status(500)
-//       .json({ error: "An error occurred while processing the request" });
-//   }
-// });
-
 router.get("/Master_grr_mc_code_grr_desc_choose", async (req, res) => {
   try {
     const result = await pool.query(
@@ -95,39 +44,6 @@ router.get("/Master_grr_mc_code_grr_desc_choose", async (req, res) => {
     res.status(500).json({ error: "An error occurred" });
   }
 });
-
-// router.get("/Master_grr_mc_code_grr_desc", async (req, res) => {
-//   try {
-//     const { grr_desc } = req.query;
-//     if (!grr_desc) {
-//       return res.status(400).json({ error: "mc_code parameter is required" });
-//     }
-
-//     const result = await pool.query(
-//       `
-//       SELECT DISTINCT
-//         mc_code
-//       FROM
-//         smart.smart_machine_grr_master smgm
-//       WHERE
-//         grr_desc = $1
-//       `,
-//       [grr_desc]
-//     );
-//     if (result.rows.length === 0) {
-//       return res
-//         .status(404)
-//         .json({ error: "No results found for the provided mc_code" });
-//     }
-
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error("Error executing query:", error);
-//     res
-//       .status(500)
-//       .json({ error: "An error occurred while processing the request" });
-//   }
-// });
 
 router.post("/Master_grr_mc_code_grr_desc", async (req, res) => {
   try {
@@ -165,6 +81,8 @@ router.post("/Master_grr_mc_code_grr_desc", async (req, res) => {
   }
 });
 
+//     TO_CHAR(grr.actual, 'YYYY-MM-DD HH24:MI') as actual,
+
 router.get("/Main_TableGrr", async (req, res) => {
   try {
     const result = await pool.query(
@@ -174,15 +92,15 @@ router.get("/Main_TableGrr", async (req, res) => {
     TO_CHAR(grr.create_at, 'YYYY-MM-DD HH24:MI') as create_at,
     grr.mc_code,
     grr.grr_desc,
-    TO_CHAR(grr.plan, 'YYYY-MM-DD HH24:MI') as plan,
-    TO_CHAR(grr.actual, 'YYYY-MM-DD HH24:MI') as actual,
+    TO_CHAR(grr.plan, 'YYYY-MM-DD') as plan,
+    TO_CHAR(grr.actual, 'YYYY-MM-DD ') as actual,
     grr.upload,
     grr.status,
     grmaster.period_day as life_time,
     grmaster.warning_day,
     list.item_code,
-    TO_CHAR(grr.plan  + (grmaster.period_day || ' days')::INTERVAL, 'YYYY-MM-DD HH24:MI') as next_plan,
-    TO_CHAR(grr.plan + (grmaster.period_day || ' days')::INTERVAL - (grmaster.warning_day || ' days')::INTERVAL, 'YYYY-MM-DD HH24:MI') as warning_date
+    TO_CHAR(grr.plan  + (grmaster.period_day || ' days')::INTERVAL, 'YYYY-MM-DD ') as next_plan,
+    TO_CHAR(grr.plan + (grmaster.period_day || ' days')::INTERVAL - (grmaster.warning_day || ' days')::INTERVAL, 'YYYY-MM-DD') as warning_date
 FROM
     smart.smart_machine_grr grr
 INNER JOIN
