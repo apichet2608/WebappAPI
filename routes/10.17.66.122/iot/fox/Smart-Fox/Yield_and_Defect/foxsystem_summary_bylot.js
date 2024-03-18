@@ -238,7 +238,7 @@ router.get("/data-fix", async (req, res) => {
     query += `
     order by production_date  asc
     `;
-    // console.log(query);
+
     const result = await pool.query(query, queryParams);
     if (result.rowCount === 0) {
       res.status(200).json({
@@ -346,7 +346,7 @@ router.get("/data-all", async (req, res) => {
     order by
       production_date asc
     `;
-    // console.log(query);
+
     const result = await pool.query(query, queryParams);
     // res.status(200).json(result.rows);
     if (result.rowCount === 0) {
@@ -406,6 +406,7 @@ router.get("/distinct-station_process", async (req, res) => {
       and DATE_TRUNC('day',
       production_date) <= DATE_TRUNC('day',
       $2::TIMESTAMP)
+      and station_process not in ('TEST27_holding_time_27','TEST39_holding_time_39', 'TEST74_holding_time_74')
     `;
 
     const queryParams = [startdate, stopdate];
@@ -423,7 +424,7 @@ router.get("/distinct-station_process", async (req, res) => {
     query += `
     order by station_process asc
     `;
-    console.log(query);
+
     const result = await pool.query(query, queryParams);
     // res.status(200).json(result.rows);
     if (result.rowCount === 0) {
@@ -483,9 +484,9 @@ router.get("/distinct-product", async (req, res) => {
     query += `
     order by sendresultdetails_product asc
     `;
-    // console.log(query);
+
     const result = await pool.query(query, queryParams);
-    console.log(result);
+
     if (result.rowCount === 0) {
       res.status(200).json({
         status: "OK",

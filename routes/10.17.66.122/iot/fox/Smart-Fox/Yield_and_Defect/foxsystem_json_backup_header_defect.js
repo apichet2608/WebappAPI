@@ -1,6 +1,4 @@
-const e = require("express");
 const express = require("express");
-const { status } = require("express/lib/response");
 const router = express.Router();
 const { Pool } = require("pg");
 
@@ -14,232 +12,32 @@ const pool = new Pool({
 
 const query = (text, params) => pool.query(text, params);
 
-// router.get("/fox-summary", async (req, res) => {
-//   try {
-//     const result = await query(
-//       `select
-//  	ROW_NUMBER() OVER (ORDER BY production_date) AS id,
-//     production_date,
-//     sendresultdetails_product,
-//     MAX(CASE WHEN station_process = 'TEST15_spi_ky' THEN percent_yield END) AS test15_spi_ky,
-//     MAX(CASE WHEN station_process = 'TEST15_spi_ky' THEN total_count END) AS test15_spi_ky_total_count,
-//     MAX(CASE WHEN station_process = 'TEST15_spi_ky' THEN result_pass END) AS test15_spi_ky_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST15_spi_ky' THEN result_fail END) AS test15_spi_ky_result_fail,
-//     MAX(CASE WHEN station_process = 'TEST18_aoi' THEN percent_yield END) AS test18_aoi,
-//     MAX(CASE WHEN station_process = 'TEST18_aoi' THEN total_count END) AS test18_aoi_total_count,
-//     MAX(CASE WHEN station_process = 'TEST18_aoi' THEN result_pass END) AS test18_aoi_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST18_aoi' THEN result_fail END) AS test18_aoi_result_fail,
-//     MAX(CASE WHEN station_process = 'TEST27_holding_time_27' THEN percent_yield END) AS test27_holding_time,
-//     MAX(CASE WHEN station_process = 'TEST27_holding_time_27' THEN total_count END) AS test27_holding_time_total_count,
-//     MAX(CASE WHEN station_process = 'TEST27_holding_time_27' THEN result_pass END) AS test27_holding_time_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST27_holding_time_27' THEN result_fail END) AS test27_holding_time_result_fail,
-//     MAX(CASE WHEN station_process = 'TEST12_xray' THEN percent_yield END) AS test12_xray,
-//     MAX(CASE WHEN station_process = 'TEST12_xray' THEN total_count END) AS test12_xray_total_count,
-//     MAX(CASE WHEN station_process = 'TEST12_xray' THEN result_pass END) AS test12_xray_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST12_xray' THEN result_fail END) AS test12_xray_result_fail,
-//     MAX(CASE WHEN station_process = 'IQC-FLEX3_et' THEN percent_yield END) AS iqc_flex3_et,
-//     MAX(CASE WHEN station_process = 'IQC-FLEX3_et' THEN total_count END) AS iqc_flex3_et_total_count,
-//     MAX(CASE WHEN station_process = 'IQC-FLEX3_et' THEN result_pass END) AS iqc_flex3_et_result_pass,
-//     MAX(CASE WHEN station_process = 'IQC-FLEX3_et' THEN result_fail END) AS iqc_flex3_et_result_fail,
-//     MAX(CASE WHEN station_process = 'TEST42_oqc_et' THEN percent_yield END) AS test42_oqc_et,
-//     MAX(CASE WHEN station_process = 'TEST42_oqc_et' THEN total_count END) AS test42_oqc_et_total_count,
-//     MAX(CASE WHEN station_process = 'TEST42_oqc_et' THEN result_pass END) AS test42_oqc_et_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST42_oqc_et' THEN result_fail END) AS test42_oqc_et_result_fail,
-//     MAX(CASE WHEN station_process = 'TEST21_avi' THEN percent_yield END) AS test21_avi_percent_yield,
-//     MAX(CASE WHEN station_process = 'TEST21_avi' THEN total_count END) AS test21_avi_total_count,
-//     MAX(CASE WHEN station_process = 'TEST21_avi' THEN result_pass END) AS test21_avi_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST21_avi' THEN result_fail END) AS test21_avi_result_fail,
-//     MAX(CASE WHEN station_process = 'TEST13_oqc_fai' THEN percent_yield END) AS test13_oqc_fai,
-//     MAX(CASE WHEN station_process = 'TEST13_oqc_fai' THEN total_count END) AS test13_oqc_fai_total_count,
-//     MAX(CASE WHEN station_process = 'TEST13_oqc_fai' THEN result_pass END) AS test13_oqc_fai_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST13_oqc_fai' THEN result_fail END) AS test13_oqc_fai_result_fail,
-//     MAX(CASE WHEN station_process = 'TEST39_holding_time_39' THEN percent_yield END) AS test39_holding_time,
-//     MAX(CASE WHEN station_process = 'TEST39_holding_time_39' THEN total_count END) AS test39_holding_time_total_count,
-//     MAX(CASE WHEN station_process = 'TEST39_holding_time_39' THEN result_pass END) AS test39_holding_time_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST39_holding_time_39' THEN result_fail END) AS test39_holding_time_result_fail,
-//     MAX(CASE WHEN station_process = 'TEST74_holding_time_74' THEN percent_yield END) AS test74_holding_time,
-//     MAX(CASE WHEN station_process = 'TEST74_holding_time_74' THEN total_count END) AS test74_holding_time_total_count,
-//     MAX(CASE WHEN station_process = 'TEST74_holding_time_74' THEN result_pass END) AS test74_holding_time_result_pass,
-//     MAX(CASE WHEN station_process = 'TEST74_holding_time_74' THEN result_fail END) AS test74_holding_time_result_fail
-// FROM
-//     foxsystem_json_backup_header_summary
-// GROUP BY
-//     production_date,
-//     sendresultdetails_product`
-//     );
-
-//     res.status(200).json(result.rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "An error occurred while fetching data" });
-//   }
-// });
-
-// router.get("/data-fix", async (req, res) => {
-//   try {
-//     const { process, startdate, stopdate, product } = req.query;
-
-//     const result = await query(
-//       `select
-//       id,
-//       production_date,
-//       station_process,
-//       sendresultdetails_product,
-//       lss_lot_no,
-//       total_count,
-//       result_pass,
-//       result_fail,
-//       percent_yield
-//     from
-//       fox.foxsystem_summary_bylot
-//     where
-//       station_process = $1
-//       and production_date >= $2
-//       and DATE_TRUNC('day',
-//       production_date) <= DATE_TRUNC('day',
-//       $3::TIMESTAMP)
-//       and sendresultdetails_product = $4
-//     order by production_date  asc`,
-//       [process, startdate, stopdate, product]
-//     );
-
-//     res.status(200).json(result.rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "An error occurred while fetching data" });
-//   }
-// });
-
-// router.get("/data-all", async (req, res) => {
-//   try {
-//     const { startdate, stopdate, product } = req.query;
-
-//     const result = await query(
-//       `select
-//       row_number() over (
-//     order by
-//       production_date) as id,
-//       production_date,
-//       sendresultdetails_product,
-//       MAX(case when station_process = 'TEST15_spi_ky' then percent_yield end) as test15_spi_ky,
-//       MAX(case when station_process = 'TEST15_spi_ky' then total_count end) as test15_spi_ky_total_count,
-//       MAX(case when station_process = 'TEST15_spi_ky' then result_pass end) as test15_spi_ky_result_pass,
-//       MAX(case when station_process = 'TEST15_spi_ky' then result_fail end) as test15_spi_ky_result_fail,
-//       MAX(case when station_process = 'TEST15_spi_ckd' then percent_yield end) as test15_spi_ckd,
-//       MAX(case when station_process = 'TEST15_spi_ckd' then total_count end) as test15_spi_ckd_total_count,
-//       MAX(case when station_process = 'TEST15_spi_ckd' then result_pass end) as test15_spi_ckd_result_pass,
-//       MAX(case when station_process = 'TEST15_spi_ckd' then result_fail end) as test15_spi_ckd_result_fail,
-//       MAX(case when station_process = 'TEST18_aoi' then percent_yield end) as test18_aoi,
-//       MAX(case when station_process = 'TEST18_aoi' then total_count end) as test18_aoi_total_count,
-//       MAX(case when station_process = 'TEST18_aoi' then result_pass end) as test18_aoi_result_pass,
-//       MAX(case when station_process = 'TEST18_aoi' then result_fail end) as test18_aoi_result_fail,
-//       MAX(case when station_process = 'TEST27_holding_time_27' then percent_yield end) as test27_holding_time,
-//       MAX(case when station_process = 'TEST27_holding_time_27' then total_count end) as test27_holding_time_total_count,
-//       MAX(case when station_process = 'TEST27_holding_time_27' then result_pass end) as test27_holding_time_result_pass,
-//       MAX(case when station_process = 'TEST27_holding_time_27' then result_fail end) as test27_holding_time_result_fail,
-//       MAX(case when station_process = 'TEST12_xray' then percent_yield end) as test12_xray,
-//       MAX(case when station_process = 'TEST12_xray' then total_count end) as test12_xray_total_count,
-//       MAX(case when station_process = 'TEST12_xray' then result_pass end) as test12_xray_result_pass,
-//       MAX(case when station_process = 'TEST12_xray' then result_fail end) as test12_xray_result_fail,
-//       MAX(case when station_process = 'IQC-FLEX3_et' then percent_yield end) as iqc_flex3_et,
-//       MAX(case when station_process = 'IQC-FLEX3_et' then total_count end) as iqc_flex3_et_total_count,
-//       MAX(case when station_process = 'IQC-FLEX3_et' then result_pass end) as iqc_flex3_et_result_pass,
-//       MAX(case when station_process = 'IQC-FLEX3_et' then result_fail end) as iqc_flex3_et_result_fail,
-//       MAX(case when station_process = 'TEST42_oqc_et' then percent_yield end) as test42_oqc_et,
-//       MAX(case when station_process = 'TEST42_oqc_et' then total_count end) as test42_oqc_et_total_count,
-//       MAX(case when station_process = 'TEST42_oqc_et' then result_pass end) as test42_oqc_et_result_pass,
-//       MAX(case when station_process = 'TEST42_oqc_et' then result_fail end) as test42_oqc_et_result_fail,
-//       MAX(case when station_process = 'TEST21_avi' then percent_yield end) as test21_avi_percent_yield,
-//       MAX(case when station_process = 'TEST21_avi' then total_count end) as test21_avi_total_count,
-//       MAX(case when station_process = 'TEST21_avi' then result_pass end) as test21_avi_result_pass,
-//       MAX(case when station_process = 'TEST21_avi' then result_fail end) as test21_avi_result_fail,
-//       MAX(case when station_process = 'TEST13_oqc_fai' then percent_yield end) as test13_oqc_fai,
-//       MAX(case when station_process = 'TEST13_oqc_fai' then total_count end) as test13_oqc_fai_total_count,
-//       MAX(case when station_process = 'TEST13_oqc_fai' then result_pass end) as test13_oqc_fai_result_pass,
-//       MAX(case when station_process = 'TEST13_oqc_fai' then result_fail end) as test13_oqc_fai_result_fail,
-//       MAX(case when station_process = 'TEST39_holding_time_39' then percent_yield end) as test39_holding_time,
-//       MAX(case when station_process = 'TEST39_holding_time_39' then total_count end) as test39_holding_time_total_count,
-//       MAX(case when station_process = 'TEST39_holding_time_39' then result_pass end) as test39_holding_time_result_pass,
-//       MAX(case when station_process = 'TEST39_holding_time_39' then result_fail end) as test39_holding_time_result_fail,
-//       MAX(case when station_process = 'TEST74_holding_time_74' then percent_yield end) as test74_holding_time,
-//       MAX(case when station_process = 'TEST74_holding_time_74' then total_count end) as test74_holding_time_total_count,
-//       MAX(case when station_process = 'TEST74_holding_time_74' then result_pass end) as test74_holding_time_result_pass,
-//       MAX(case when station_process = 'TEST74_holding_time_74' then result_fail end) as test74_holding_time_result_fail
-//     from
-//       foxsystem_summary_bylot
-//     where
-//       production_date >= $1
-//       and DATE_TRUNC('day',
-//       production_date) <= DATE_TRUNC('day',
-//       $2::TIMESTAMP)
-//       and sendresultdetails_product = $3
-//     group by
-//       production_date,
-//       sendresultdetails_product
-//     order by
-//       production_date asc`,
-//       [startdate, stopdate, product]
-//     );
-
-//     res.status(200).json(result.rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "An error occurred while fetching data" });
-//   }
-// });
-
-router.get("/data-fix", async (req, res) => {
+router.get("/fix-process-product-day-select", async (req, res) => {
   try {
-    const { process, startdate, stopdate, product } = req.query;
+    const { process, product, date } = req.query;
 
-    let query = `
-    select
+    const result = await query(
+      `select
       id,
-      production_date,
       station_process,
       sendresultdetails_product,
-      lss_lot_no,
-      total_count,
-      result_pass,
-      result_fail,
-      percent_yield
+      "date" ,
+      uut_attributes_defect_desc,
+      defect_count
     from
-      fox.foxsystem_summary_bylot
+      fox.foxsystem_json_backup_header_defect_day
     where
-      production_date >= $1
-      and DATE_TRUNC('day',
-      production_date) <= DATE_TRUNC('day',
-      $2::TIMESTAMP)
-    `;
+      station_process = $1
+      and sendresultdetails_product = $2
+      and "date" like $3
+      and uut_attributes_defect_desc != 'NA'
+    order by
+      id`,
+      [process, product, date]
+    );
 
-    const queryParams = [startdate, stopdate];
+    // res.status(200).json(result.rows);
 
-    if (product && product !== "ALL") {
-      if (queryParams.length === 0) {
-        query += `WHERE`;
-      } else {
-        query += `AND`;
-      }
-      query += ` sendresultdetails_product = $${queryParams.length + 1}
-      `;
-      queryParams.push(product);
-    }
-
-    if (process && process !== "ALL") {
-      if (queryParams.length === 0) {
-        query += `WHERE`;
-      } else {
-        query += `AND`;
-      }
-      query += ` station_process = $${queryParams.length + 1}
-      `;
-      queryParams.push(process);
-    }
-    query += `
-    order by production_date  asc
-    `;
-    // console.log(query);
-    const result = await pool.query(query, queryParams);
     if (result.rowCount === 0) {
       res.status(200).json({
         status: "OK",
@@ -252,8 +50,8 @@ router.get("/data-fix", async (req, res) => {
         .json({ status: "OK", message: "Data found", data: result.rows });
     }
   } catch (error) {
-    console.error("Error executing query:", error);
-    // res.status(500).json({ error: "An error occurred" });
+    console.error(error);
+    // res.status(500).json({ error: "An error occurred while fetching data" });
     res.status(500).json({
       status: "Catch",
       message: "An error occurred while fetching data",
@@ -262,92 +60,34 @@ router.get("/data-fix", async (req, res) => {
   }
 });
 
-router.get("/data-all", async (req, res) => {
+router.get("/fix-process-product-month-select", async (req, res) => {
   try {
-    const { startdate, stopdate, product } = req.query;
+    let { process, product, month } = req.query;
 
-    let query = `
-    select
-      row_number() over (
-    order by
-      production_date) as id,
-      production_date,
+    // change format key month 2023 12 Month to Month 12 2023
+    let date = month.split(" ");
+    month = `${date[2]} ${date[1]} ${date[0]}`;
+
+    const result = await query(
+      `select
+      id,
+      station_process,
       sendresultdetails_product,
-      MAX(case when station_process = 'TEST15_spi_ky' then percent_yield end) as test15_spi_ky,
-      MAX(case when station_process = 'TEST15_spi_ky' then total_count end) as test15_spi_ky_total_count,
-      MAX(case when station_process = 'TEST15_spi_ky' then result_pass end) as test15_spi_ky_result_pass,
-      MAX(case when station_process = 'TEST15_spi_ky' then result_fail end) as test15_spi_ky_result_fail,
-      MAX(case when station_process = 'TEST15_spi_ckd' then percent_yield end) as test15_spi_ckd,
-      MAX(case when station_process = 'TEST15_spi_ckd' then total_count end) as test15_spi_ckd_total_count,
-      MAX(case when station_process = 'TEST15_spi_ckd' then result_pass end) as test15_spi_ckd_result_pass,
-      MAX(case when station_process = 'TEST15_spi_ckd' then result_fail end) as test15_spi_ckd_result_fail,
-      MAX(case when station_process = 'TEST18_aoi' then percent_yield end) as test18_aoi,
-      MAX(case when station_process = 'TEST18_aoi' then total_count end) as test18_aoi_total_count,
-      MAX(case when station_process = 'TEST18_aoi' then result_pass end) as test18_aoi_result_pass,
-      MAX(case when station_process = 'TEST18_aoi' then result_fail end) as test18_aoi_result_fail,
-      MAX(case when station_process = 'TEST27_holding_time_27' then percent_yield end) as test27_holding_time,
-      MAX(case when station_process = 'TEST27_holding_time_27' then total_count end) as test27_holding_time_total_count,
-      MAX(case when station_process = 'TEST27_holding_time_27' then result_pass end) as test27_holding_time_result_pass,
-      MAX(case when station_process = 'TEST27_holding_time_27' then result_fail end) as test27_holding_time_result_fail,
-      MAX(case when station_process = 'TEST12_xray' then percent_yield end) as test12_xray,
-      MAX(case when station_process = 'TEST12_xray' then total_count end) as test12_xray_total_count,
-      MAX(case when station_process = 'TEST12_xray' then result_pass end) as test12_xray_result_pass,
-      MAX(case when station_process = 'TEST12_xray' then result_fail end) as test12_xray_result_fail,
-      MAX(case when station_process = 'IQC-FLEX3_et' then percent_yield end) as iqc_flex3_et,
-      MAX(case when station_process = 'IQC-FLEX3_et' then total_count end) as iqc_flex3_et_total_count,
-      MAX(case when station_process = 'IQC-FLEX3_et' then result_pass end) as iqc_flex3_et_result_pass,
-      MAX(case when station_process = 'IQC-FLEX3_et' then result_fail end) as iqc_flex3_et_result_fail,
-      MAX(case when station_process = 'TEST42_oqc_et' then percent_yield end) as test42_oqc_et,
-      MAX(case when station_process = 'TEST42_oqc_et' then total_count end) as test42_oqc_et_total_count,
-      MAX(case when station_process = 'TEST42_oqc_et' then result_pass end) as test42_oqc_et_result_pass,
-      MAX(case when station_process = 'TEST42_oqc_et' then result_fail end) as test42_oqc_et_result_fail,
-      MAX(case when station_process = 'TEST21_avi' then percent_yield end) as test21_avi_percent_yield,
-      MAX(case when station_process = 'TEST21_avi' then total_count end) as test21_avi_total_count,
-      MAX(case when station_process = 'TEST21_avi' then result_pass end) as test21_avi_result_pass,
-      MAX(case when station_process = 'TEST21_avi' then result_fail end) as test21_avi_result_fail,
-      MAX(case when station_process = 'TEST13_oqc_fai' then percent_yield end) as test13_oqc_fai,
-      MAX(case when station_process = 'TEST13_oqc_fai' then total_count end) as test13_oqc_fai_total_count,
-      MAX(case when station_process = 'TEST13_oqc_fai' then result_pass end) as test13_oqc_fai_result_pass,
-      MAX(case when station_process = 'TEST13_oqc_fai' then result_fail end) as test13_oqc_fai_result_fail,
-      MAX(case when station_process = 'TEST39_holding_time_39' then percent_yield end) as test39_holding_time,
-      MAX(case when station_process = 'TEST39_holding_time_39' then total_count end) as test39_holding_time_total_count,
-      MAX(case when station_process = 'TEST39_holding_time_39' then result_pass end) as test39_holding_time_result_pass,
-      MAX(case when station_process = 'TEST39_holding_time_39' then result_fail end) as test39_holding_time_result_fail,
-      MAX(case when station_process = 'TEST74_holding_time_74' then percent_yield end) as test74_holding_time,
-      MAX(case when station_process = 'TEST74_holding_time_74' then total_count end) as test74_holding_time_total_count,
-      MAX(case when station_process = 'TEST74_holding_time_74' then result_pass end) as test74_holding_time_result_pass,
-      MAX(case when station_process = 'TEST74_holding_time_74' then result_fail end) as test74_holding_time_result_fail
+      "month" ,
+      uut_attributes_defect_desc,
+      defect_count
     from
-      fox.foxsystem_summary_bylot
+      fox.foxsystem_json_backup_header_defect_month
     where
-      production_date >= $1
-      and DATE_TRUNC('day',
-      production_date) <= DATE_TRUNC('day',
-      $2::TIMESTAMP)
-    `;
-
-    const queryParams = [startdate, stopdate];
-
-    if (product && product !== "ALL") {
-      if (queryParams.length === 0) {
-        query += `WHERE`;
-      } else {
-        query += `AND`;
-      }
-      query += ` sendresultdetails_product = $${queryParams.length + 1}
-      `;
-      queryParams.push(product);
-    }
-
-    query += `
-    group by
-      production_date,
-      sendresultdetails_product
+      station_process = $1
+      and sendresultdetails_product = $2
+      and "month" like $3
+      and uut_attributes_defect_desc != 'NA'
     order by
-      production_date asc
-    `;
-    // console.log(query);
-    const result = await pool.query(query, queryParams);
+      id`,
+      [process, product, month]
+    );
+
     // res.status(200).json(result.rows);
     if (result.rowCount === 0) {
       res.status(200).json({
@@ -361,8 +101,8 @@ router.get("/data-all", async (req, res) => {
         .json({ status: "OK", message: "Data found", data: result.rows });
     }
   } catch (error) {
-    console.error("Error executing query:", error);
-    // res.status(500).json({ error: "An error occurred" });
+    console.error(error);
+    // res.status(500).json({ error: "An error occurred while fetching data" });
     res.status(500).json({
       status: "Catch",
       message: "An error occurred while fetching data",
@@ -371,140 +111,311 @@ router.get("/data-all", async (req, res) => {
   }
 });
 
-// router.get("/distinct-station_process", async (req, res) => {
-//   try {
-//     const { product } = req.query;
-//     const result = await query(
-//       `
-//     select
-//     distinct station_process
-//   from
-//     fox.foxsystem_summary_bylot
-//   where sendresultdetails_product = $1
-//   order by
-//   station_process asc
-//     `,
-//       [product]
-//     );
-//     res.status(200).json(result.rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "An error occurred while fetching data" });
-//   }
-// });
-
-router.get("/distinct-station_process", async (req, res) => {
+router.get("/fix-process-product-week-select", async (req, res) => {
   try {
-    const { startdate, stopdate, product } = req.query;
-    let query = `
+    let { process, product, week } = req.query;
+
+    console.log(week);
+
+    let date = week.split(" ");
+    week = `${date[1]} ${date[2]} ${date[0]}`;
+    console.log(week);
+    const result = await query(
+      `select
+      id,
+      station_process,
+      sendresultdetails_product,
+      "week" ,
+      uut_attributes_defect_desc,
+      defect_count
+    from
+      fox.foxsystem_json_backup_header_defect_week
+    where
+      station_process = $1
+      and sendresultdetails_product = $2
+      and "week" like $3
+      and uut_attributes_defect_desc != 'NA'
+    order by
+      id`,
+      [process, product, week]
+    );
+
+    // res.status(200).json(result.rows);\
+    if (result.rowCount === 0) {
+      res.status(200).json({
+        status: "OK",
+        message: "No data found",
+        data: [],
+      });
+    } else {
+      res
+        .status(200)
+        .json({ status: "OK", message: "Data found", data: result.rows });
+    }
+  } catch (error) {
+    console.error(error);
+    // res.status(500).json({ error: "An error occurred while fetching data" });
+    res.status(500).json({
+      status: "Catch",
+      message: "An error occurred while fetching data",
+      data: [],
+    });
+  }
+});
+
+router.get("/fix-process-product-day", async (req, res) => {
+  try {
+    const { process, product } = req.query;
+    let queryParams = [product];
+    let queryStr = `select
+      distinct "date"
+    from
+      fox.foxsystem_json_backup_header_defect_day
+    where
+      sendresultdetails_product = $1
+      and uut_attributes_defect_desc != 'NA'
+      `;
+
+    if (process) {
+      if (queryParams.length > 0) {
+        queryStr += `
+          AND station_process = $${queryParams.length + 1}
+        `;
+        queryParams.push(process);
+      }
+    }
+
+    queryStr += `
+      order by
+        "date" desc
+    `;
+    const result = await query(queryStr, queryParams);
+
+    if (result.rowCount === 0) {
+      res.status(200).json({
+        status: "OK",
+        message: "No data found",
+        data: [],
+      });
+    } else {
+      res
+        .status(200)
+        .json({ status: "OK", message: "Data found", data: result.rows });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "Catch",
+      message: "An error occurred while fetching data",
+      data: [],
+    });
+  }
+});
+
+router.get("/fix-process-product-week", async (req, res) => {
+  try {
+    const { process, product } = req.query;
+
+    let queryParams = [product];
+    let queryStr = `select
+      distinct week
+    from
+      fox.foxsystem_json_backup_header_defect_week
+    where
+      sendresultdetails_product = $1
+      and uut_attributes_defect_desc != 'NA'
+      `;
+    if (process) {
+      if (queryParams.length > 0) {
+        queryStr += `
+          AND station_process = $${queryParams.length + 1}
+        `;
+        queryParams.push(process);
+      }
+    }
+
+    queryStr += `
+      order by
+        week desc
+    `;
+    const result = await query(queryStr, queryParams);
+
+    if (result.rowCount === 0) {
+      res.status(200).json({
+        status: "OK",
+        message: "No data found",
+        data: [],
+      });
+    } else {
+      result.rows.map((row) => {
+        // change format key week Week 12 2023 to 2023 12 Week
+        let date = row.week.split(" ");
+        row.week = `${date[2]} ${date[0]} ${date[1]}`;
+      });
+      // สร้างฟังก์ชันเพื่อใช้ในการเรียงลำดับวัน
+      function compareWeeks(a, b) {
+        // แปลงสตริงวันที่เป็นตัวเลขของปีและสัปดาห์
+        function weekStringToNumber(weekString) {
+          // แยกสตริงเป็นปีและสัปดาห์
+          const [yearA, weekA] = weekString.split(" Week ");
+          // แปลงปีและสัปดาห์เป็นตัวเลขและคืนค่า
+          return { year: parseInt(yearA), week: parseInt(weekA) };
+        }
+
+        // แปลงสตริงวันที่ให้เป็นตัวเลขของปีและสัปดาห์
+        const weekA = weekStringToNumber(a.week);
+        const weekB = weekStringToNumber(b.week);
+
+        // กรณีวันที่มีปีเท่ากัน เรียงตามสัปดาห์
+        if (weekA.year === weekB.year) {
+          return weekB.week - weekA.week;
+        }
+
+        // กรณีปีไม่เท่ากัน เรียงตามปี
+        return weekB.year - weekA.year;
+      }
+
+      // เรียงลำดับข้อมูลในอาร์เรย์ result.rows
+      result.rows.sort(compareWeeks);
+
+      // กรองเฉพาะข้อมูลที่อยู่ในปีล่าสุด
+      const currentYear = new Date().getFullYear();
+      const weeksThisYear = result.rows.filter((row) => {
+        const year = parseInt(row.week.substring(0, 4));
+        return year === currentYear;
+      });
+
+      // แสดงผลลัพธ์
+      console.log(weeksThisYear);
+
+      res
+        .status(200)
+        .json({ status: "OK", message: "Data found", data: result.rows });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "Catch",
+      message: "An error occurred while fetching data",
+      data: [],
+    });
+  }
+});
+
+router.get("/fix-process-product-month", async (req, res) => {
+  try {
+    const { process, product } = req.query;
+    let queryParams = [product];
+    let queryStr = `select
+      distinct month
+    from
+      fox.foxsystem_json_backup_header_defect_month
+    where
+      sendresultdetails_product = $1
+      and uut_attributes_defect_desc != 'NA'
+      `;
+    if (process) {
+      if (queryParams.length > 0) {
+        queryStr += `
+          AND station_process = $${queryParams.length + 1}
+        `;
+        queryParams.push(process);
+      }
+    }
+
+    queryStr += `
+      order by
+        month desc
+    `;
+    const result = await query(queryStr, queryParams);
+
+    if (result.rowCount === 0) {
+      res.status(200).json({
+        status: "OK",
+        message: "No data found",
+        data: [],
+      });
+    } else {
+      result.rows.map((row) => {
+        // change format key month Month 12 2023 to 2023 12 Month
+        let date = row.month.split(" ");
+        row.month = `${date[2]} ${date[1]} ${date[0]}`;
+      });
+      // แปลงชื่อเดือนเป็นตัวเลขเพื่อให้ง่ายต่อการเรียงลำดับ
+      const monthToNumber = {
+        "1 Month": 1,
+        "2 Month": 2,
+        "3 Month": 3,
+        "4 Month": 4,
+        "5 Month": 5,
+        "6 Month": 6,
+        "7 Month": 7,
+        "8 Month": 8,
+        "9 Month": 9,
+        "10 Month": 10,
+        "11 Month": 11,
+        "12 Month": 12,
+      };
+
+      // เรียงลำดับข้อมูลใน result.rows โดยใช้ค่าตัวเลขของเดือน
+      result.rows.sort((a, b) => {
+        const monthA = monthToNumber[a.month.split(" ")[1]];
+        const monthB = monthToNumber[b.month.split(" ")[1]];
+        const yearA = parseInt(a.month.split(" ")[0]);
+        const yearB = parseInt(b.month.split(" ")[0]);
+
+        if (yearA === yearB) {
+          return monthB - monthA;
+        } else {
+          return yearB - yearA;
+        }
+      });
+
+      res
+        .status(200)
+        .json({ status: "OK", message: "Data found", data: result.rows });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      status: "Catch",
+      message: "An error occurred while fetching data",
+      data: [],
+    });
+  }
+});
+
+router.get("/distinct-station-process", async (req, res) => {
+  try {
+    const result = await query(`
     select
     distinct station_process
   from
-    fox.foxsystem_summary_bylot
-    where
-     production_date >= $1
-      and DATE_TRUNC('day',
-      production_date) <= DATE_TRUNC('day',
-      $2::TIMESTAMP)
-      and station_process not in ['TEST27_holding_time_27','TEST39_holding_time_39', 'TEST74_holding_time_74']
-    `;
-
-    const queryParams = [startdate, stopdate];
-    if (product && product !== "ALL") {
-      if (queryParams.length === 0) {
-        query += `WHERE`;
-      } else {
-        query += `AND`;
-      }
-      query += ` sendresultdetails_product = $${queryParams.length + 1}
-      `;
-      queryParams.push(product);
-    }
-
-    query += `
-    order by station_process asc
-    `;
-    console.log(query);
-    const result = await pool.query(query, queryParams);
-    // res.status(200).json(result.rows);
-    if (result.rowCount === 0) {
-      res.status(200).json({
-        status: "OK",
-        message: "No data found",
-        data: [],
-      });
-    } else {
-      res
-        .status(200)
-        .json({ status: "OK", message: "Data found", data: result.rows });
-    }
+    foxsystem_json_backup_header_defect_day fjbhdd
+  order by
+    station_process 
+    `);
+    res.status(200).json(result.rows);
   } catch (error) {
-    console.error("Error executing query:", error);
-    // res.status(500).json({ error: "An error occurred" });
-    res.status(500).json({
-      status: "Catch",
-      message: "An error occurred while fetching data",
-      data: [],
-    });
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
   }
 });
 
-// router.get("/distinct-product", async (req, res) => {
-//   try {
-//     const result = await query(`
-//     select
-//     distinct sendresultdetails_product
-//   from
-//     fox.foxsystem_summary_bylot
-//     `);
-//     res.status(200).json(result.rows);
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "An error occurred while fetching data" });
-//   }
-// });
-
-router.get("/distinct-product", async (req, res) => {
+router.get("/distinct-sendresultdetails-product", async (req, res) => {
   try {
-    const { startdate, stopdate } = req.query;
-    let query = `
+    const result = await query(`
     select
     distinct sendresultdetails_product
   from
-    fox.foxsystem_summary_bylot
-    where
-     production_date >= $1
-      and DATE_TRUNC('day',
-      production_date) <= DATE_TRUNC('day',
-      $2::TIMESTAMP)
-    `;
-
-    const queryParams = [startdate, stopdate];
-
-    query += `
-    order by sendresultdetails_product asc
-    `;
-    // console.log(query);
-    const result = await pool.query(query, queryParams);
-    console.log(result);
-    if (result.rowCount === 0) {
-      res.status(200).json({
-        status: "OK",
-        message: "No data found",
-        data: [],
-      });
-    } else {
-      res
-        .status(200)
-        .json({ status: "OK", message: "Data found", data: result.rows });
-    }
+    foxsystem_json_backup_header_defect_day fjbhdd
+  order by
+    sendresultdetails_product
+    `);
+    res.status(200).json(result.rows);
   } catch (error) {
-    console.error("Error executing query:", error);
-    res.status(500).json({
-      status: "Catch",
-      message: "An error occurred while fetching data",
-      data: [],
-    });
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while fetching data" });
   }
 });
 
